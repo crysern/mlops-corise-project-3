@@ -61,17 +61,15 @@ class NewsCategoryClassifier:
         1. Load the sentence transformer model and initialize the `featurizer` of type `TransformerFeaturizer` (Hint: revisit Week 1 Step 4)
         2. Load the serialized model as defined in GLOBAL_CONFIG['model'] into memory and initialize `model`
         """
-        dim = self.config["model"]["featurizer"]["sentence_transformer_embedding_dim"]
-        sentence_transformer_model = SentenceTransformer(self.config["model"]["featurizer"]["sentence_transformer_model"])
-        featurizer = TransformerFeaturizer(dim, sentence_transformer_model)
-
-        model_path = self.config["model"]["classifier"]["serialized_model_path"]
-        model = joblib.load(model_path)
-        self.class_names = model.classes_
-
+        self.featurizer = TransformerFeaturizer(
+            self.config["model"]["featurizer"]["sentence_transformer_embedding_dim"],
+            SentenceTransformer(self.config["model"]["featurizer"]["sentence_transformer_model"])
+        )
+        self.model = joblib.load(self.config["model"]["classifier"]["serialized_model_path"])
+        self.class_names = self.model.classes_
         self.pipeline = Pipeline([
-            ('transformer_featurizer', featurizer),
-            ('classifier', model)
+            ('featurizer', self.featurizer),
+            ('model', self.model)
         ])
 
     def predict_proba(self, model_input: dict) -> dict:
